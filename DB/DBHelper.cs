@@ -64,5 +64,20 @@ namespace DB
                 
             //}
         }
+
+        public static int ExecuteInsertPic_SP(Pic pic)
+        {
+            SqlCommand objCommand = new SqlCommand("dbo.sp_InsertPic", conn);
+            objCommand.CommandType = CommandType.StoredProcedure;
+            objCommand.Parameters.Add("@name", SqlDbType.VarChar, 255).Value = pic.Name;
+            objCommand.Parameters.Add("@path", SqlDbType.VarChar, 255).Value = pic.Path;
+            objCommand.Parameters.Add("@length", SqlDbType.Float, 255).Value = pic.Length;
+            objCommand.Parameters.Add("@md5", SqlDbType.VarChar, 50).Value = pic.Md5;
+            objCommand.Parameters.Add("@mark", SqlDbType.VarChar, 255).Value = pic.Mark;
+            conn.Open();
+            int i = objCommand.ExecuteNonQuery();
+            conn.Close();
+            return i;
+        }
     }
 }

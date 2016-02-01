@@ -17,26 +17,20 @@ namespace BLL
             String[] path = Directory.GetFiles(directoryStr, "*", SearchOption.AllDirectories);
             ArrayList fis = new ArrayList();
             String lowerCase;
-            //String[] extensions = { ".avi", ".wmv", ".rmvb", ".iso", ".rm", ".afs", ".flv", ".pdf",".mpg","mpeg" };
             String[] extensions = { ".avi", ".wmv", ".rmvb", ".iso", ".rm", ".afs", ".flv", ".pdf", ".vob", ".rar", ".mpg", ".mpeg", ".mds", ".jpg", ".bmp", ".jpeg", ".mkv", ".dat", ".tif", ".mp4", "zip", ".mov", ".mpe", ".dat", ".bik", ".asx", ".wvx", ".mpa", ".bt!", ".m4v", ".divx", ".asf", ".nrg", ".ogm", ".mdf", ".md0", ".md1", ".md2", ".md3", ".md4", ".m4v", ".ogv", ".exe", ".rar", ".msi", ".7z", ".r00", ".m2ts" };
 
             foreach (String p in path)
             {
                 FileInfo fileInfo = new FileInfo(p);
                 
-                //Console.WriteLine(f);
-                //Console.WriteLine(f.LastIndexOf("."));
                 string sub = fileInfo.Extension;
                 lowerCase = sub.ToLower();
                 Console.WriteLine(fileInfo.Extension);
 
-                //if (sub == "avi" || sub=="wmv"||sub=="rmvb"||sub=="iso"||sub=="rm"||sub=="afs"||sub=="flv"||sub.Contains("md")||sub=="pdf")
+              
                 if (extensions.Contains(lowerCase))
                 {
-                    //Console.WriteLine(f.Substring(f.LastIndexOf(".")));
-                    //Console.WriteLine(p);
-                    //listStr += p + "\n";
-                    //fis.Add(myFileInfo);
+
                     MyFileInfo myFileInfo = new MyFileInfo();
                     myFileInfo.FileName = fileInfo.Name.Replace("'","''");
                     myFileInfo.Directory = fileInfo.Directory.Name;
@@ -117,6 +111,36 @@ namespace BLL
             newList.Add(oldList[0]);
 
             return newList;
+        }
+
+        public static void movePic(string path)
+        {
+            ArrayList moveList = new ArrayList();
+            DirectoryInfo TheFolder = new DirectoryInfo(path);
+            bool isPicFolder;
+            foreach (DirectoryInfo NextFolder in TheFolder.GetDirectories("*", SearchOption.TopDirectoryOnly))
+            {
+                isPicFolder = true;
+                FileInfo[] fileInfos = NextFolder.GetFiles("*", SearchOption.AllDirectories);
+                foreach (FileInfo fileInfo in fileInfos)
+                {
+                    if (fileInfo.Length / 1024 / 2024 > 25)
+                    {
+                        isPicFolder = false;
+                        break;
+                    }
+
+                }
+                if (isPicFolder)
+                {
+                    moveList.Add(NextFolder);
+                }
+
+            }
+            foreach (DirectoryInfo info in moveList)
+            {
+                Directory.Move(info.FullName, Path.Combine(Path.Combine( Path.GetPathRoot(path),"pic"), info.ToString()).ToString());
+            }
         }
 
     }

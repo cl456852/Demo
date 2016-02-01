@@ -12,6 +12,7 @@ using BLL;
 using DAL;
 using DB;
 using System.IO;
+using System.Security.Cryptography;
 namespace UI1
 {
     public partial class Form1 : Form
@@ -21,6 +22,7 @@ namespace UI1
             InitializeComponent();
         }
         List<MyFileInfo> list = new List<MyFileInfo>();
+        MD5 md5 = MD5.Create();
 
         public void refresh()
         {
@@ -63,7 +65,13 @@ namespace UI1
 
         private void Insert_Click(object sender, EventArgs e)
         {
-    
+            FileBLL.movePic(textBox1.Text);
+            ArrayList duplicatePics= processPic(textBox1.Text.Replace("\\", "\\\\"));
+            foreach (Pic pic in duplicatePics)
+            {
+               
+                    movePic(pic.Path);
+            }
             List<MyFileInfo> duplicateList = new List<MyFileInfo>();
             duplicateList= FileBLL.InsertFiles(textBox1.Text.Replace("\\","\\\\"));
             if (duplicateList.Capacity > 0)
@@ -82,6 +90,33 @@ namespace UI1
             refresh();
         }
 
+        private ArrayList processPic(string path)
+        {
+            ArrayList duplicatePics = new ArrayList();
+            String[] pathes = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+            foreach(string p in pathes)
+            {
+                FileInfo fileInfo=new FileInfo(p);
+
+                Pic pic=new Pic();
+                pic.Md5 = GetMd5(p);
+                pic.Name=Path.GetFileName(path);
+                pic.Length = fileInfo.Length/1024;
+                pic.Path = p;
+
+                if(FileDAL.CheckPic(pic))
+                {
+                    FileDAL.InsertPic(pic);
+                }
+                else
+                {
+                    duplicatePics.Add(pic);
+                }
+
+            }
+            return duplicatePics;
+        }
+
         private void moveFile(MyFileInfo myFileInfo)
         {
             if(!Directory.Exists(myFileInfo.DirectoryName[0] + ":\\duplicate\\"))
@@ -94,6 +129,19 @@ namespace UI1
             
         
                 
+        }
+
+        private void movePic(string path)
+        {
+            string fileName = Path.GetFileName(path);
+            string directory = path[0] + ":\\duplicate\\";
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            string newPath = Path.Combine(directory, Path.GetFileName(path));
+            while (File.Exists(newPath))
+                newPath += "1";
+            File.Move(path, newPath);
+
         }
         private void button1_Click(object sender, EventArgs e)
         {
@@ -114,19 +162,6 @@ namespace UI1
             List<MyFileInfo> sortList = new List<MyFileInfo>();
             sortList = (List<MyFileInfo>)dataGridView1.DataSource;
             string dataclick = dataGridView1.Columns[e.ColumnIndex].DataPropertyName;
-            //List<MyFileInfo> listNow;
-            //if (dataClicked == dataGridView1.Columns[e.ColumnIndex].DataPropertyName)
-            //{
-                
-            //    listNow= (List<MyFileInfo>)dataGridView1.DataSource;
-            //    listNow.Reverse();
-            //    dataGridView1.DataSource = listNow;
-            //}
-            //else
-            //    dataGridView1.DataSource = FileDAL.selectMyFileInfo(dataGridView1.Columns[e.ColumnIndex].DataPropertyName);
-            //dataClicked = dataGridView1.Columns[e.ColumnIndex].DataPropertyName;
-            //dataGridView1.Refresh();
-            //dataGridView1.Columns[e.ColumnIndex].HeaderCell.Style.
             if (flag = true && dataclick == dataClicked)
             {
                 sortList.Reverse();
@@ -189,51 +224,42 @@ namespace UI1
         {
             textBox2.Focus();
         }
-        
-        
 
-        //private void SortRows(DataGridViewColumn sortColumn, bool orderToggle)
-        //{
-        //    if (sortColumn == null)
-        //        return;
 
-        //    //清除前面的排序
-        //    if (sortColumn.SortMode == DataGridViewColumnSortMode.Programmatic &&
-        //        dataGridView1.SortedColumn != null &&
-        //        !dataGridView1.SortedColumn.Equals(sortColumn))
-        //    {
-        //        dataGridView1.SortedColumn.HeaderCell.SortGlyphDirection =
-        //            SortOrder.None;
-        //    }
+        public static string GetMd5(string pathName)
+        {
+            string strResult = "";
+            string strHashData = "";
+            byte[] arrbytHashValue;
 
-        //    //设定排序的方向（升序、降序）
-        //    ListSortDirection sortDirection;
-        //    if (orderToggle)
-        //    {
-        //        sortDirection =
-        //            dataGridView1.SortOrder == SortOrder.Descending ?
-        //            ListSortDirection.Ascending : ListSortDirection.Descending;
-        //    }
-        //    else
-        //    {
-        //        sortDirection =
-        //            dataGridView1.SortOrder == SortOrder.Descending ?
-        //            ListSortDirection.Descending : ListSortDirection.Ascending;
-        //    }
-        //    SortOrder sortOrder =
-        //        sortDirection == ListSortDirection.Ascending ?
-        //        SortOrder.Ascending : SortOrder.Descending;
+            System.IO.FileStream oFileStream = null;
 
-        //    //进行排序
-        //    dataGridView1.Sort(sortColumn, sortDirection);
+            System.Security.Cryptography.MD5CryptoServiceProvider oMD5Hasher = new System.Security.Cryptography.MD5CryptoServiceProvider();
 
-        //    if (sortColumn.SortMode == DataGridViewColumnSortMode.Programmatic)
-        //    {
-        //        //变更排序图标
-        //        sortColumn.HeaderCell.SortGlyphDirection = sortOrder;
-        //    }
-        //}
+            try
+            {
+                oFileStream = new System.IO.FileStream(pathName.Replace("\"", ""), System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
 
+                arrbytHashValue = oMD5Hasher.ComputeHash(oFileStream); //计算指定Stream 对象的哈希值
+
+                oFileStream.Close();
+
+                //由以连字符分隔的十六进制对构成的String，其中每一对表示value 中对应的元素；例如“F-2C-4A”
+
+                strHashData = System.BitConverter.ToString(arrbytHashValue);
+
+                //替换-
+                strHashData = strHashData.Replace("-", "");
+
+                strResult = strHashData;
+            }
+
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return strResult;
+        }
 
     }
 }
