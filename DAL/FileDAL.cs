@@ -41,7 +41,7 @@ namespace DAL
         private static bool Check(MyFileInfo fi)
         {
             bool flag=false;
-            string sql = "select * from files where [fileName] = '" + fi.FileName + "' and [length]= "+fi.Length;
+            string sql = "select * from files where [fileName] = '" + fi.FileName + "' and [length]= "+fi.Length +" and extension !='.vob'";
             //string sql = "select * from files where [fileName] = '" + fi.FileName + "' or [mark]='" + fi.Mark+"'";
             SqlDataReader sdr = DBHelper.SearchSql(sql);
             if (sdr.Read())
@@ -120,7 +120,7 @@ namespace DAL
         public static bool CheckPic(Pic pic)
         {
             bool flag = false;
-            string sql = "select * from pic where md5="+pic.Md5;
+            string sql = "select * from pic where md5='"+pic.Md5+"'";
             SqlDataReader sdr = DBHelper.SearchSql(sql);
             if (sdr.Read())
                 flag = true;

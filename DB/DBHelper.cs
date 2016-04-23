@@ -8,7 +8,7 @@ namespace DB
 {
     public class DBHelper
     {
-        public static string connstr = "server=A-PC\\SQLEXPRESS;uid=sa;pwd=a;database=cd";
+        public static string connstr = "server=localhost;uid=sa;pwd=a;database=cd";
         //static string connstr = "server=MICROSOF-8335F8\\SQLEXPRESS;uid=sa;pwd=a;database=cd";
         public static SqlConnection conn = new SqlConnection(connstr);
         //static string connstr = "server=.;uid=sa;pwd=a;database=cd";
@@ -73,7 +73,7 @@ namespace DB
             objCommand.Parameters.Add("@path", SqlDbType.VarChar, 255).Value = pic.Path;
             objCommand.Parameters.Add("@length", SqlDbType.Float, 255).Value = pic.Length;
             objCommand.Parameters.Add("@md5", SqlDbType.VarChar, 50).Value = pic.Md5;
-            objCommand.Parameters.Add("@mark", SqlDbType.VarChar, 255).Value = pic.Mark;
+            objCommand.Parameters.Add("@mark", SqlDbType.Text).Value = pic.Mark;
             conn.Open();
             int i = objCommand.ExecuteNonQuery();
             conn.Close();

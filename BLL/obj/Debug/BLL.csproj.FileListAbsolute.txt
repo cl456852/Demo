@@ -86,3 +86,14 @@ C:\Users\b\Source\Repos\testcl456852\复件 Demo\BLL\obj\Debug\BLL.csprojResolve
 C:\Users\b\Source\Repos\testcl456852\复件 Demo\BLL\obj\Debug\BLL.dll
 C:\Users\b\Source\Repos\testcl456852\复件 Demo\BLL\obj\Debug\BLL.pdb
 D:\document\new\work\复件 Demo\BLL\obj\Debug\BLL.csprojResolveAssemblyReference.cache
+D:\document\new\code\Demo\BLL\bin\Debug\BLL.dll
+D:\document\new\code\Demo\BLL\bin\Debug\BLL.pdb
+D:\document\new\code\Demo\BLL\bin\Debug\DAL.dll
+D:\document\new\code\Demo\BLL\bin\Debug\MODEL.dll
+D:\document\new\code\Demo\BLL\bin\Debug\DB.dll
+D:\document\new\code\Demo\BLL\bin\Debug\DAL.pdb
+D:\document\new\code\Demo\BLL\bin\Debug\MODEL.pdb
+D:\document\new\code\Demo\BLL\bin\Debug\DB.pdb
+D:\document\new\code\Demo\BLL\obj\Debug\BLL.csprojResolveAssemblyReference.cache
+D:\document\new\code\Demo\BLL\obj\Debug\BLL.dll
+D:\document\new\code\Demo\BLL\obj\Debug\BLL.pdb

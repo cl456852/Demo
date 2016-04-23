@@ -113,8 +113,9 @@ namespace BLL
             return newList;
         }
 
-        public static void movePic(string path)
+        public static List<string> movePic(string path)
         {
+            List<string> picList = new List<string>();
             ArrayList moveList = new ArrayList();
             DirectoryInfo TheFolder = new DirectoryInfo(path);
             bool isPicFolder;
@@ -137,10 +138,31 @@ namespace BLL
                 }
 
             }
+            
             foreach (DirectoryInfo info in moveList)
             {
-                Directory.Move(info.FullName, Path.Combine(Path.Combine( Path.GetPathRoot(path),"pic"), info.ToString()).ToString());
+                string dateDirectory = path.Split(new string[] { "\\" }, StringSplitOptions.None)[2];
+                string indexDirectory = path.Split(new string[] { "\\" }, StringSplitOptions.None)[1];
+                string newPath = Path.Combine(Path.Combine(Path.GetPathRoot(path), "pic" + indexDirectory), dateDirectory).ToString();
+                if (!Directory.Exists(newPath))
+                    Directory.CreateDirectory(newPath);
+                newPath= Path.Combine(newPath,info.ToString());
+                picList.Add(newPath);
+                while (true)
+                {
+                    try
+                    {
+                        Directory.Move(info.FullName, newPath);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        newPath += "1";
+                    }
+                    
+                }
             }
+            return picList;
         }
 
     }

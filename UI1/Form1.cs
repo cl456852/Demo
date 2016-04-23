@@ -65,13 +65,20 @@ namespace UI1
 
         private void Insert_Click(object sender, EventArgs e)
         {
-            FileBLL.movePic(textBox1.Text);
-            ArrayList duplicatePics= processPic(textBox1.Text.Replace("\\", "\\\\"));
+            List<string> picList= FileBLL.movePic(textBox1.Text);
+            ArrayList duplicatePics = new ArrayList(); ;
+            foreach (string path in picList)
+            {
+                duplicatePics.AddRange( processPic(path));
+            }
             foreach (Pic pic in duplicatePics)
             {
                
                     movePic(pic.Path);
             }
+            string index = textBox1.Text.Split('\\')[1];
+            string picPath = Path.GetPathRoot(textBox1.Text)+ "Pic" + index;
+            removeEmptyFolder(picPath);
             List<MyFileInfo> duplicateList = new List<MyFileInfo>();
             duplicateList= FileBLL.InsertFiles(textBox1.Text.Replace("\\","\\\\"));
             if (duplicateList.Capacity > 0)
@@ -90,6 +97,19 @@ namespace UI1
             refresh();
         }
 
+        private void removeEmptyFolder(String path)
+        {
+            if (Directory.Exists(path))
+            {
+                String[] pathes = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
+                foreach (string p in pathes)
+                {
+                    if (Directory.Exists(p)&& Directory.GetFiles(p, "*", SearchOption.AllDirectories).Length == 0)
+                        Directory.Delete(p,true);
+                }
+            }
+        }
+
         private ArrayList processPic(string path)
         {
             ArrayList duplicatePics = new ArrayList();
@@ -104,7 +124,7 @@ namespace UI1
                 pic.Length = fileInfo.Length/1024;
                 pic.Path = p;
 
-                if(FileDAL.CheckPic(pic))
+                if(!FileDAL.CheckPic(pic))
                 {
                     FileDAL.InsertPic(pic);
                 }
@@ -134,7 +154,9 @@ namespace UI1
         private void movePic(string path)
         {
             string fileName = Path.GetFileName(path);
-            string directory = path[0] + ":\\duplicate\\";
+            string directoryName = path.Split('\\')[3];
+
+            string directory = path[0] + ":\\duplicate\\"+directoryName;
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
             string newPath = Path.Combine(directory, Path.GetFileName(path));

@@ -47,7 +47,7 @@ namespace MODEL
             set { md5 = value; }
         }
 
-        string mark;
+        string mark="";
 
         public string Mark
         {
