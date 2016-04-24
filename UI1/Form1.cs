@@ -93,7 +93,7 @@ namespace UI1
                 f2.Show();
             }
             else
-                MessageBox.Show("seccuss CDID: "+FileDAL.getMaxCDID());
+                MessageBox.Show("seccuss");
             refresh();
         }
 

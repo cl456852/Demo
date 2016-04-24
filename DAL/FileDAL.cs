@@ -18,8 +18,6 @@ namespace DAL
         public static List<MyFileInfo> Insert(ArrayList list)
         {
             List<MyFileInfo> duplicateList = new List<MyFileInfo>();
-            string sql1 = "insert cd values (getdate())";
-            DBHelper.ExecuteSql(sql1);
             foreach (MyFileInfo fi in list)
             {
                 if(Check(fi))
@@ -74,7 +72,7 @@ namespace DAL
                  sql = "select * from [cdfile],[files] where [cdfile].fileId=[files].fileId order by files."+sortBy;
             }
             else
-                sql = "select * from [cdfile],[files] where [cdfile].fileId=[files].fileId";
+                sql = "select * from [files]";
             List<MyFileInfo> MyFileInfoList=new List<MyFileInfo>();
            
             SqlDataReader sdr= DBHelper.SearchSql(sql);
@@ -93,7 +91,6 @@ namespace DAL
                 myFileInfo.FileId =Convert.ToInt32( sdr["fileId"]);
                 myFileInfo.Length = Convert.ToDouble(sdr["length"]);
                 myFileInfo.Mark = sdr["mark"].ToString();
-                myFileInfo.CdId =Convert.ToInt32( sdr["cdId"]);
                 MyFileInfoList.Add(myFileInfo);
 
             }
