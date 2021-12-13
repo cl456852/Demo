@@ -6,6 +6,7 @@ using System.Linq;
 using System.IO;
 using System.Collections;
 using MODEL;
+using System.Text.RegularExpressions;
 
 namespace BLL
 {
@@ -163,6 +164,45 @@ namespace BLL
                 }
             }
             return picList;
+        }
+
+
+        public static string[] GetId(string id)
+        {
+            Regex reg1 = new Regex("[a-z]|[A-Z]");
+            string letter = "";
+            string number = "";
+            bool isEndofLetter = false;
+            for (int i = 0; i < id.Length; i++)                        //修改   对于出现KIDM235A  KIDM235B
+                if (reg1.IsMatch(id[i].ToString()))
+                {
+                    if (isEndofLetter)
+                        break;
+                    else
+                        letter += id[i];
+                }
+                else
+                {
+                    number += id[i];
+                    isEndofLetter = true;
+                }
+
+            string[] searchStr = { letter, number };
+            return searchStr;
+        }
+
+        public static bool IsEnCh(string input)
+        {
+            string pattern = @"^[A-Za-z]+$";
+            Regex regex = new Regex(pattern);
+            return regex.IsMatch(input);
+        }
+
+        public static bool IsNum(string input)
+        {
+            string pattern = @"^[0-9]+$";
+            Regex regex = new Regex(pattern);
+            return regex.IsMatch(input);
         }
 
     }

@@ -7,6 +7,9 @@ using DAL;
 using System.IO;
 using MODEL;
 using System.Reflection;
+using DB;
+using System.Data.SqlClient;
+
 namespace Test
 {
     class Program
@@ -14,7 +17,7 @@ namespace Test
         static void Main(string[] args)
         {
             Program p = new Program();
-            p.checkDirectory();
+            p.test();
             Console.Read();
             //p.checkCheck();
             //MyFileInfo tc = new MyFileInfo();
@@ -46,6 +49,62 @@ namespace Test
         public void checkDirectory()
         {
             Console.WriteLine( Directory.Exists("h:\\37"));
+        }
+
+        public void test()
+        {
+            //string s = "中文にほんニホンABC심판";
+            //foreach (char c in s)
+
+            //{
+
+            //    if (c >= 0x4E00 && c <= 0x9FA5) Console.WriteLine(c + "是汉字");
+
+            //    else if (c >= 0x3040 && c <= 0x309F) Console.WriteLine(c + "是平假名");
+
+            //    else if (c >= 0x30A0 && c <= 0x30FF) Console.WriteLine(c + "是片假名");
+
+            //    else if(c>= 0x3100&&c<= 0x31BF||c>0xAC00 && c<=0xD7A3) Console.WriteLine(c + "是韩文");
+
+            //}
+            List<MyFileInfo> MyFileInfoList = new List<MyFileInfo>();
+            SqlDataReader sdr=  DBHelper.SearchSql("select * from files where length>=100");
+            while (sdr.Read())
+            {
+
+                MyFileInfo myFileInfo = new MyFileInfo();
+                myFileInfo.Directory = sdr["directory"].ToString();
+                myFileInfo.DirectoryName = sdr["directoryName"].ToString();
+                myFileInfo.FileName = sdr["fileName"].ToString();
+                myFileInfo.Extension = sdr["extension"].ToString();
+                myFileInfo.LastAccessTime = sdr["lastAccessTime"].ToString();
+                myFileInfo.LastWriteTime = sdr["lastWriteTime"].ToString();
+                myFileInfo.FileId = Convert.ToInt32(sdr["fileId"]);
+                myFileInfo.Length = Convert.ToDouble(sdr["length"]);
+                myFileInfo.Mark = sdr["mark"].ToString();
+                MyFileInfoList.Add(myFileInfo);
+
+            }
+            //foreach(MyFileInfo myFileInfo in MyFileInfoList)
+            //{
+            //    if()
+            //}
+
+
+        }
+        bool CheckStringChar(string s)
+        {
+            foreach (char c in s)
+            {
+                if (c >= 0x4E00 && c <= 0x9FA5) return false;
+
+                else if (c >= 0x3040 && c <= 0x309F) return false;
+
+                else if (c >= 0x30A0 && c <= 0x30FF) return false;
+
+                else if (c >= 0x3100 && c <= 0x31BF || c > 0xAC00 && c <= 0xD7A3) return false;
+            }
+            return true;
         }
 
         //public void Validate()

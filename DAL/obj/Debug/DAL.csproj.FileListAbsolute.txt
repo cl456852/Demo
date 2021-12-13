@@ -70,3 +70,16 @@ D:\document\new\code\Demo\DAL\bin\Debug\DB.dll
 D:\document\new\code\Demo\DAL\bin\Debug\MODEL.dll
 D:\document\new\code\Demo\DAL\bin\Debug\DB.pdb
 D:\document\new\code\Demo\DAL\bin\Debug\MODEL.pdb
+D:\document\new\code\Demo\DAL\obj\Debug\DAL.csproj.CoreCompileInputs.cache
+D:\document\new\code\Demo\DAL\obj\Debug\DAL.csproj.CopyComplete
+E:\d\document\new\code\Demo\DAL\bin\Debug\DAL.dll
+E:\d\document\new\code\Demo\DAL\bin\Debug\DAL.pdb
+E:\d\document\new\code\Demo\DAL\bin\Debug\DB.dll
+E:\d\document\new\code\Demo\DAL\bin\Debug\MODEL.dll
+E:\d\document\new\code\Demo\DAL\bin\Debug\DB.pdb
+E:\d\document\new\code\Demo\DAL\bin\Debug\MODEL.pdb
+E:\d\document\new\code\Demo\DAL\obj\Debug\DAL.csproj.CoreCompileInputs.cache
+E:\d\document\new\code\Demo\DAL\obj\Debug\DAL.csproj.CopyComplete
+E:\d\document\new\code\Demo\DAL\obj\Debug\DAL.dll
+E:\d\document\new\code\Demo\DAL\obj\Debug\DAL.pdb
+E:\d\document\new\code\Demo\DAL\obj\Debug\DAL.csproj.AssemblyReference.cache

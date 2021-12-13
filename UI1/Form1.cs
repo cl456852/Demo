@@ -202,6 +202,11 @@ namespace UI1
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
+            if (checkBox1.Checked && !textBox2.Text.Contains(" ")&&!textBox2.Text.Contains("-") &&(!FileBLL.IsEnCh(textBox2.Text)&&!FileBLL.IsNum(textBox2.Text)))
+            {
+                string[] id = FileBLL.GetId(textBox2.Text);
+                textBox2.Text = id[0] + " " + id[1];
+            }
             if (textBox2.Text.Contains("`"))
             {
                 textBox2.Text = "";
@@ -238,7 +243,6 @@ namespace UI1
 
         private void button2_Click(object sender, EventArgs e)
         {
-            DBHelper.connstr = this.textBox3.Text;
             refresh();
         }
 
