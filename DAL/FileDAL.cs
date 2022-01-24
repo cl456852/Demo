@@ -72,7 +72,7 @@ namespace DAL
                  sql = "select * from [cdfile],[files] where [cdfile].fileId=[files].fileId order by files."+sortBy;
             }
             else
-                sql = "select * from [files]";
+                sql = "select fileName, directoryName,length, mark, lastWriteTime,directory from [files]";
             List<MyFileInfo> MyFileInfoList=new List<MyFileInfo>();
            
             SqlDataReader sdr= DBHelper.SearchSql(sql);
@@ -85,10 +85,10 @@ namespace DAL
                 myFileInfo.Directory = sdr["directory"].ToString();
                 myFileInfo.DirectoryName = sdr["directoryName"].ToString();
                 myFileInfo.FileName = sdr["fileName"].ToString();
-                myFileInfo.Extension = sdr["extension"].ToString();
-                myFileInfo.LastAccessTime=sdr["lastAccessTime"].ToString();
+                //myFileInfo.Extension = sdr["extension"].ToString();
+                //myFileInfo.LastAccessTime=sdr["lastAccessTime"].ToString();
                 myFileInfo.LastWriteTime = sdr["lastWriteTime"].ToString();
-                myFileInfo.FileId =Convert.ToInt32( sdr["fileId"]);
+                //myFileInfo.FileId =Convert.ToInt32( sdr["fileId"]);
                 myFileInfo.Length = Convert.ToDouble(sdr["length"]);
                 myFileInfo.Mark = sdr["mark"].ToString();
                 MyFileInfoList.Add(myFileInfo);

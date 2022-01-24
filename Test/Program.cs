@@ -69,22 +69,22 @@ namespace Test
             //}
             List<MyFileInfo> MyFileInfoList = new List<MyFileInfo>();
             SqlDataReader sdr=  DBHelper.SearchSql("select * from files where length>=100");
-            while (sdr.Read())
-            {
+            //while (sdr.Read())
+            //{
 
-                MyFileInfo myFileInfo = new MyFileInfo();
-                myFileInfo.Directory = sdr["directory"].ToString();
-                myFileInfo.DirectoryName = sdr["directoryName"].ToString();
-                myFileInfo.FileName = sdr["fileName"].ToString();
-                myFileInfo.Extension = sdr["extension"].ToString();
-                myFileInfo.LastAccessTime = sdr["lastAccessTime"].ToString();
-                myFileInfo.LastWriteTime = sdr["lastWriteTime"].ToString();
-                myFileInfo.FileId = Convert.ToInt32(sdr["fileId"]);
-                myFileInfo.Length = Convert.ToDouble(sdr["length"]);
-                myFileInfo.Mark = sdr["mark"].ToString();
-                MyFileInfoList.Add(myFileInfo);
+            //    MyFileInfo myFileInfo = new MyFileInfo();
+            //    myFileInfo.Directory = sdr["directory"].ToString();
+            //    myFileInfo.DirectoryName = sdr["directoryName"].ToString();
+            //    myFileInfo.FileName = sdr["fileName"].ToString();
+            //    myFileInfo.Extension = sdr["extension"].ToString();
+            //    myFileInfo.LastAccessTime = sdr["lastAccessTime"].ToString();
+            //    myFileInfo.LastWriteTime = sdr["lastWriteTime"].ToString();
+            //    myFileInfo.FileId = Convert.ToInt32(sdr["fileId"]);
+            //    myFileInfo.Length = Convert.ToDouble(sdr["length"]);
+            //    myFileInfo.Mark = sdr["mark"].ToString();
+            //    MyFileInfoList.Add(myFileInfo);
 
-            }
+            //}
             //foreach(MyFileInfo myFileInfo in MyFileInfoList)
             //{
             //    if()

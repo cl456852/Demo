@@ -9,7 +9,35 @@ namespace MODEL
 {
     public class MyFileInfo
     {
+        string fileName;
 
+        public string FileName
+        {
+            get { return fileName; }
+            set { fileName = value; }
+        }
+        double length;
+
+        public double Length
+        {
+            get { return length; }
+            set { length = value; }
+        }
+        string directoryName;
+
+        public string DirectoryName
+        {
+            get { return directoryName; }
+            set { directoryName = value; }
+        }
+
+        private string lastWriteTime;
+
+        public string LastWriteTime
+        {
+            get { return lastWriteTime; }
+            set { lastWriteTime = value; }
+        }
         int fileId;
 
         public int FileId
@@ -24,13 +52,6 @@ namespace MODEL
         get { return cdId; }
             set { cdId = value; }
         }
-        string fileName;
-
-        public string FileName
-        {
-            get { return fileName; }
-            set { fileName = value; }
-        }
 
         string directory;
 
@@ -39,20 +60,8 @@ namespace MODEL
             get { return directory; }
             set { directory = value; }
         }
-        string directoryName;
 
-        public string DirectoryName
-        {
-            get { return directoryName; }
-            set { directoryName = value; }
-        }
-        double length;
 
-        public double Length
-        {
-            get { return length; }
-            set { length = value; }
-        }
 
 
         private string lastAccessTime;
@@ -63,13 +72,7 @@ namespace MODEL
             set { lastAccessTime = value; }
         }
 
-        private string lastWriteTime;
 
-        public string LastWriteTime
-        {
-            get { return lastWriteTime; }
-            set { lastWriteTime = value; }
-        }
 
 
         string extension;

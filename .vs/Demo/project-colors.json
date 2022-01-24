@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "51939127-8e88-48c1-ab3f-0ef5ff6b89c3": {
+      "ProjectGuid": "51939127-8e88-48c1-ab3f-0ef5ff6b89c3",
+      "DisplayName": "UI1",
+      "ColorIndex": 0
+    },
+    "921ebe20-e9b1-440c-a1c4-178606343a36": {
+      "ProjectGuid": "921ebe20-e9b1-440c-a1c4-178606343a36",
+      "DisplayName": "DB",
+      "ColorIndex": 1
+    }
+  },
+  "NextColorIndex": 2
+}
