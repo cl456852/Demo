@@ -68,14 +68,19 @@ jobs:
         fetch-depth: 0
         
 
-    - name: security-devops-action
-      uses: microsoft/security-devops-action@v1.5.0
+    - uses: actions/checkout@v2
+    - uses: actions/setup-dotnet@v1
       with:
-      # A file path to a .gdnconfig file.
-      # A comma separated list of analyzer categories to run. Values secrets, code, artifacts, IaC, containers. Example IaC,secrets. Defaults to all.
-      # A comma separated list of languages to analyze. Example javascript, typescript. Defaults to all.
-      # A comma separated list of analyzer tools to run. Example bandit, binskim, eslint, template-analyzer, terrascan, trivy.
-        tools: bandit, binskim, eslint, terrascan, trivy
+        dotnet-version: |
+          5.0.x
+          6.0.x
+    - name: Run Microsoft Security DevOps
+      uses: microsoft/security-devops-action@preview
+      id: msdo
+    - name: Upload results to Security tab
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.msdo.outputs.sarifFile }}
     
     # Install the .NET Core workload
     - name: Install .NET Core
