@@ -13,6 +13,8 @@ using DAL;
 using DB;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+
 namespace UI1
 {
     public partial class Form1 : Form
@@ -206,6 +208,11 @@ namespace UI1
             {
                 string[] id = FileBLL.GetId(textBox2.Text);
                 textBox2.Text = id[0] + " " + id[1];
+            }
+            if (checkBox2.Checked)
+            {
+                string output = Regex.Replace(textBox2.Text, "(\\B[A-Z])", " $1");
+                textBox2.Text = output;
             }
             if (textBox2.Text.Contains("`"))
             {
