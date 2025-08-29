@@ -217,7 +217,6 @@ namespace UI1
             if (textBox2.Text.Contains("`"))
             {
                 textBox2.Text = "";
-                DBHelper.connstr = this.textBox3.Text;
                 refresh();
             }
             string[] searchStr = textBox2.Text.ToLower().Split(' ');
