@@ -126,5 +126,32 @@ namespace DAL
             DBHelper.conn.Close();
             return flag;
         }
+
+        public static string Check4k(string vid)
+        {
+            bool flag = false;
+            string sql = "select fileName from files where length>1000 and fileName like '%"+vid+"%' and fileName like '%\\[4K\\]%' escape '\\' and fileName like '%.mkv'";
+            SqlDataReader sdr = DBHelper.SearchSql(sql);
+            string res="";
+            if (sdr.Read())
+                res = sdr["fileName"].ToString();
+            sdr.Close();
+            sdr.Dispose();
+            DBHelper.conn.Close();
+            return res;
+        }
+
+        public static bool CheckLiguiPic(string name)
+        {
+            bool flag = false;
+            string sql = "select * from pic where fileName='"+name+"'";
+            SqlDataReader sdr = DBHelper.SearchSql(sql);
+            if (sdr.Read())
+                flag = true;
+            sdr.Close();
+            sdr.Dispose();
+            DBHelper.conn.Close();
+            return flag;
+        }
     }
 }

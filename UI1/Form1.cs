@@ -90,7 +90,7 @@ namespace UI1
                 foreach (MyFileInfo myFileInfo in duplicateList)
                 {
                     if (myFileInfo.Length > 70)
-                        moveFile(myFileInfo);
+                        moveFile(myFileInfo, ":\\duplicate\\");
                 }
                 f2.Show();
             }
@@ -139,11 +139,11 @@ namespace UI1
             return duplicatePics;
         }
 
-        private void moveFile(MyFileInfo myFileInfo)
+        public static void moveFile(MyFileInfo myFileInfo, string subDir)
         {
-            if(!Directory.Exists(myFileInfo.DirectoryName[0] + ":\\duplicate\\"))
-                Directory.CreateDirectory(myFileInfo.DirectoryName[0] + ":\\duplicate\\");
-            string newPath = Path.Combine(myFileInfo.DirectoryName[0] + ":\\duplicate\\", myFileInfo.FileName);
+            if(!Directory.Exists(myFileInfo.DirectoryName[0] + subDir))
+                Directory.CreateDirectory(myFileInfo.DirectoryName[0] + subDir);
+            string newPath = Path.Combine(myFileInfo.DirectoryName[0] + subDir, myFileInfo.FileName);
             while (File.Exists(newPath))
                 newPath += "1";
            
@@ -292,6 +292,84 @@ namespace UI1
             }
             return strResult;
         }
+        static string pattern = @"([A-Z]+[0-9A-Z]*-\d+)";
+        private void button3_Click(object sender, EventArgs e)
+        {
+            long sizeLimit = 500L * 1024 * 1024; // 500MB
+            
+            TraverseDirectory(textBox1.Text, sizeLimit);
+        }
+        
+        static void TraverseDirectory(string path, long sizeLimit)
+        {
+            try
+            {
+                // 遍历当前文件夹下的所有文件
+                foreach (var file in Directory.EnumerateFiles(path))
+                {
+                    try
+                    {
+                        FileInfo fi = new FileInfo(file);
+                        if (fi.Length > sizeLimit)
+                        {
+                            if(fi.Name.EndsWith("-C.mp4") || fi.Name.EndsWith("-UC.mp4")||(fi.Name.EndsWith(".mkv")&&fi.Name.Contains("[4K]")))
+                                continue;
+                            string vid=  Regex.Match(fi.Name, pattern).Value;
+                            if (vid != string.Empty)
+                            {
+                                string fileName = FileDAL.Check4k(vid);
+                                if (fileName != "" && fileName != fi.Name)
+                                {
+                                    MyFileInfo myFileInfo = new MyFileInfo();
+                                    myFileInfo.FileName = fi.Name;
+                                    myFileInfo.DirectoryName = fi.DirectoryName;
+                                    moveFile(myFileInfo, ":\\duplicate\\4k\\");
+                                    Console.WriteLine($"{fi.FullName} ({fi.Length / (1024.0 * 1024.0):F2} MB) {vid}");
+                                    Console.WriteLine(fileName);
+                                }
+                            }
 
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"无法读取文件信息: {file}, 错误: {ex.Message}");
+                    }
+                }
+
+                // 递归遍历子文件夹
+                foreach (var dir in Directory.EnumerateDirectories(path))
+                {
+                    TraverseDirectory(dir, sizeLimit);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"无法访问目录: {path}, 错误: {ex.Message}");
+            }
+        }
+        
+        private void button4_Click(object sender, EventArgs e)
+        {
+            string filePath = @"D:\abcd\output.txt";
+            Regex regex = new Regex("[^\\/]+\\.jpg");
+            try
+            {
+                // Reads one line at a time, keeping memory usage low
+                foreach (string line in File.ReadLines(filePath))
+                {
+
+                    string name = regex.Match(line).Value;
+                    if (!FileDAL.CheckLiguiPic(name))
+                    {
+                        Console.WriteLine(line);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+        }
     }
 }

@@ -54,5 +54,7 @@ namespace MODEL
             get { return mark; }
             set { mark = value; }
         }
+
+        public string FileName => Util.Regex.Match(Path).Value;
     }
 }

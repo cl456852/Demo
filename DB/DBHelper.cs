@@ -74,6 +74,7 @@ namespace DB
             objCommand.Parameters.Add("@length", SqlDbType.Float, 255).Value = pic.Length;
             objCommand.Parameters.Add("@md5", SqlDbType.VarChar, 50).Value = pic.Md5;
             objCommand.Parameters.Add("@mark", SqlDbType.Text).Value = pic.Mark;
+            objCommand.Parameters.Add("@fileName", SqlDbType.VarChar, 255).Value = pic.FileName;
             conn.Open();
             int i = objCommand.ExecuteNonQuery();
             conn.Close();
