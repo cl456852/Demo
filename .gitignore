@@ -1,0 +1,56 @@
+## Visual Studio / .NET GitIgnore
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+## User-specific files (MonoDevelop / Xamarin Studio)
+*.userprefs
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio cache / options directory
+.vs/
+
+## ReSharper / JetBrains Rider
+_ReSharper*/
+*.ReSharper.user
+.idea/
+
+## Visual Studio Upgrade Logs
+UpgradeLog*.XML
+UpgradeLog*.htm
+UpgradeReport*
+
+## Windows temporary files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+## SQL Server files
+*.mdf
+*.ldf
+*.ndf
