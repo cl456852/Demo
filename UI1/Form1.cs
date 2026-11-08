@@ -32,6 +32,28 @@ namespace UI1
             InitNotifyIcon();
             InitSearchDebounce();
             EnableDoubleBuffered(dataGridView1);
+            this.dataGridView1.DataBindingComplete += DataGridView1_DataBindingComplete;
+        }
+
+        private void DataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            HideUnusedColumns();
+        }
+
+        private void HideUnusedColumns()
+        {
+            var unused = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "FileId", "CdId", "LastAccessTime", "Extension", "Mark"
+            };
+
+            foreach (DataGridViewColumn col in dataGridView1.Columns)
+            {
+                if (unused.Contains(col.Name) || unused.Contains(col.DataPropertyName))
+                {
+                    col.Visible = false;
+                }
+            }
         }
 
         private void InitSearchDebounce()
@@ -156,19 +178,21 @@ namespace UI1
             }
         }
         List<MyFileInfo> list = new List<MyFileInfo>();
+        private List<MyFileInfo> currentDisplayList = null;
         MD5 md5 = MD5.Create();
 
         public void refresh()
         {
             list = FileBLL.getFileList();
+            currentDisplayList = list;
             dataGridView1.DataSource = list;
-            if (dataGridView1.RowCount > 20)
-            {
-                dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 20;
-            }
             if (lblStatus != null)
             {
                 lblStatus.Text = $"共 {list.Count:N0} 条记录";
+            }
+            if (dataGridView1.RowCount > 20)
+            {
+                dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 20;
             }
         }
         private void Form1_Load(object sender, EventArgs e)
@@ -181,24 +205,41 @@ namespace UI1
             MyFileInfo myFileInfo = new MyFileInfo();
             try
             {
-                
                 int row = e.RowIndex;
-                myFileInfo.FileId = Convert.ToInt32(dataGridView1["FileId", row].Value);
-                myFileInfo.FileName = dataGridView1["FileName", row].Value.ToString();
-                myFileInfo.Directory = dataGridView1["Directory", row].Value.ToString();
-                myFileInfo.DirectoryName = dataGridView1["DirectoryName", row].Value.ToString();
-                myFileInfo.Extension = dataGridView1["Extension", row].Value.ToString();
-                myFileInfo.LastAccessTime = dataGridView1["LastAccessTime", row].Value.ToString();
-                myFileInfo.LastWriteTime = dataGridView1["LastWriteTime", row].Value.ToString();
-                myFileInfo.Length = Convert.ToInt32(dataGridView1["length", row].Value);
-                myFileInfo.Mark = dataGridView1["mark", row].Value.ToString();
+                if (row < 0 || row >= dataGridView1.RowCount) return;
+
+                MyFileInfo boundItem = dataGridView1.Rows[row].DataBoundItem as MyFileInfo;
+                if (boundItem != null)
+                {
+                    myFileInfo = boundItem;
+                }
+                else
+                {
+                    if (dataGridView1.Columns.Contains("FileId") && dataGridView1["FileId", row].Value != null)
+                        myFileInfo.FileId = Convert.ToInt32(dataGridView1["FileId", row].Value);
+                    if (dataGridView1.Columns.Contains("FileName") && dataGridView1["FileName", row].Value != null)
+                        myFileInfo.FileName = dataGridView1["FileName", row].Value.ToString();
+                    if (dataGridView1.Columns.Contains("Directory") && dataGridView1["Directory", row].Value != null)
+                        myFileInfo.Directory = dataGridView1["Directory", row].Value.ToString();
+                    if (dataGridView1.Columns.Contains("DirectoryName") && dataGridView1["DirectoryName", row].Value != null)
+                        myFileInfo.DirectoryName = dataGridView1["DirectoryName", row].Value.ToString();
+                    if (dataGridView1.Columns.Contains("Extension") && dataGridView1["Extension", row].Value != null)
+                        myFileInfo.Extension = dataGridView1["Extension", row].Value.ToString();
+                    if (dataGridView1.Columns.Contains("LastAccessTime") && dataGridView1["LastAccessTime", row].Value != null)
+                        myFileInfo.LastAccessTime = dataGridView1["LastAccessTime", row].Value.ToString();
+                    if (dataGridView1.Columns.Contains("LastWriteTime") && dataGridView1["LastWriteTime", row].Value != null)
+                        myFileInfo.LastWriteTime = dataGridView1["LastWriteTime", row].Value.ToString();
+                    if (dataGridView1.Columns.Contains("length") && dataGridView1["length", row].Value != null)
+                        myFileInfo.Length = Convert.ToDouble(dataGridView1["length", row].Value);
+                    if (dataGridView1.Columns.Contains("mark") && dataGridView1["mark", row].Value != null)
+                        myFileInfo.Mark = dataGridView1["mark", row].Value.ToString();
+                }
             }
             catch(Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
             if (FileDAL.Update(myFileInfo) > 0)
-                //MessageBox.Show("Seccess");
                 ;
             else
                 MessageBox.Show("Fail");
@@ -508,27 +549,65 @@ namespace UI1
                 }
             }
         }
-        string dataClicked="" ;
-        bool flag = false;
-        private void dataGridView1_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            List<MyFileInfo> sortList = new List<MyFileInfo>();
-            sortList = (List<MyFileInfo>)dataGridView1.DataSource;
-            string dataclick = dataGridView1.Columns[e.ColumnIndex].DataPropertyName;
-            if (flag = true && dataclick == dataClicked)
-            {
-                sortList.Reverse();
+        private string lastSortColumn = "";
+        private bool isSortAscending = false;
 
+        private async void dataGridView1_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= dataGridView1.Columns.Count) return;
+
+            string columnName = dataGridView1.Columns[e.ColumnIndex].DataPropertyName;
+            if (string.IsNullOrEmpty(columnName))
+            {
+                columnName = dataGridView1.Columns[e.ColumnIndex].Name;
+            }
+            if (string.IsNullOrEmpty(columnName)) return;
+
+            var targetList = currentDisplayList ?? (dataGridView1.DataSource as List<MyFileInfo>) ?? list;
+            if (targetList == null || targetList.Count <= 1) return;
+
+            // 切换升序 / 降序
+            if (lastSortColumn == columnName)
+            {
+                isSortAscending = !isSortAscending;
             }
             else
             {
-                sortList = FileBLL.Sort(list, dataclick);
-
+                lastSortColumn = columnName;
+                isSortAscending = true;
             }
-            dataGridView1.DataSource = sortList;
-            dataGridView1.Refresh();
-            flag = true;
-            dataClicked = dataclick;
+
+            // 更新所有列头的排序指示箭头
+            foreach (DataGridViewColumn col in dataGridView1.Columns)
+            {
+                col.HeaderCell.SortGlyphDirection = SortOrder.None;
+            }
+            dataGridView1.Columns[e.ColumnIndex].HeaderCell.SortGlyphDirection =
+                isSortAscending ? SortOrder.Ascending : SortOrder.Descending;
+
+            string headerText = dataGridView1.Columns[e.ColumnIndex].HeaderText;
+            if (string.IsNullOrEmpty(headerText)) headerText = columnName;
+
+            if (lblStatus != null)
+            {
+                lblStatus.Text = $"正在按【{headerText}】{(isSortAscending ? "升序" : "降序")}排序...";
+            }
+
+            bool asc = isSortAscending;
+            string sortProp = columnName;
+
+            // 在后台线程执行极速内省排序（Introsort），完全不占用 UI 线程
+            await Task.Run(() =>
+            {
+                FileBLL.SortFiles(targetList, sortProp, asc);
+            });
+
+            // 回到 UI 线程更新表格呈现（显示全部数据）
+            dataGridView1.DataSource = new List<MyFileInfo>(targetList);
+            if (lblStatus != null)
+            {
+                lblStatus.Text = $"已按【{headerText}】{(asc ? "升序" : "降序")}排序 (共 {targetList.Count:N0} 条)";
+            }
         }
 
         private void textBox2_TextChanged(object sender, EventArgs e)
@@ -599,6 +678,7 @@ namespace UI1
 
             if (searchTerms.Length == 0)
             {
+                currentDisplayList = list;
                 dataGridView1.DataSource = list;
                 if (lblStatus != null)
                 {
@@ -668,23 +748,11 @@ namespace UI1
                     return;
                 }
 
-                // 回到 UI 线程更新表格数据源
-                // 如果结果过多（超过5000条），只展示前5000条，避免 WinForms 控件渲染十几万行时卡死
-                if (filteredList.Count > 5000)
+                currentDisplayList = filteredList;
+                dataGridView1.DataSource = filteredList;
+                if (lblStatus != null)
                 {
-                    dataGridView1.DataSource = filteredList.Take(5000).ToList();
-                    if (lblStatus != null)
-                    {
-                        lblStatus.Text = $"找到 {filteredList.Count:N0} 条记录 (已显示前 5,000 条)";
-                    }
-                }
-                else
-                {
-                    dataGridView1.DataSource = filteredList;
-                    if (lblStatus != null)
-                    {
-                        lblStatus.Text = $"找到 {filteredList.Count:N0} 条记录";
-                    }
+                    lblStatus.Text = $"找到 {filteredList.Count:N0} 条记录";
                 }
             }
             catch (OperationCanceledException)

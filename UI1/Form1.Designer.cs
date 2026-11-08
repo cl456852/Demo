@@ -43,21 +43,26 @@
             this.lblStatus = new System.Windows.Forms.Label();
             this.lblPath = new System.Windows.Forms.Label();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.panelToolbar = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.panelToolbar.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToOrderColumns = true;
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.ColumnHeadersHeight = 46;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dataGridView1.Location = new System.Drawing.Point(12, 40);
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersWidth = 82;
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(1043, 260);
+            this.dataGridView1.Size = new System.Drawing.Size(1043, 270);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_ColumnHeaderMouseClick);
@@ -112,7 +117,7 @@
             // lblPath
             // 
             this.lblPath.AutoSize = true;
-            this.lblPath.Location = new System.Drawing.Point(12, 314);
+            this.lblPath.Location = new System.Drawing.Point(0, 7);
             this.lblPath.Name = "lblPath";
             this.lblPath.Size = new System.Drawing.Size(34, 13);
             this.lblPath.TabIndex = 11;
@@ -120,7 +125,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(48, 310);
+            this.textBox1.Location = new System.Drawing.Point(36, 4);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(235, 20);
             this.textBox1.TabIndex = 2;
@@ -128,7 +133,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(288, 308);
+            this.button1.Location = new System.Drawing.Point(276, 2);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(92, 25);
             this.button1.TabIndex = 3;
@@ -138,7 +143,7 @@
             // 
             // Insert
             // 
-            this.Insert.Location = new System.Drawing.Point(385, 308);
+            this.Insert.Location = new System.Drawing.Point(373, 2);
             this.Insert.Name = "Insert";
             this.Insert.Size = new System.Drawing.Size(65, 25);
             this.Insert.TabIndex = 1;
@@ -149,7 +154,7 @@
             // checkBoxMovePic
             // 
             this.checkBoxMovePic.AutoSize = true;
-            this.checkBoxMovePic.Location = new System.Drawing.Point(458, 312);
+            this.checkBoxMovePic.Location = new System.Drawing.Point(444, 6);
             this.checkBoxMovePic.Name = "checkBoxMovePic";
             this.checkBoxMovePic.Size = new System.Drawing.Size(120, 17);
             this.checkBoxMovePic.TabIndex = 12;
@@ -158,7 +163,7 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(595, 308);
+            this.button3.Location = new System.Drawing.Point(575, 2);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(55, 25);
             this.button3.TabIndex = 9;
@@ -168,7 +173,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(656, 308);
+            this.button4.Location = new System.Drawing.Point(636, 2);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(65, 25);
             this.button4.TabIndex = 10;
@@ -178,7 +183,7 @@
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(727, 308);
+            this.buttonClearLog.Location = new System.Drawing.Point(707, 2);
             this.buttonClearLog.Name = "buttonClearLog";
             this.buttonClearLog.Size = new System.Drawing.Size(70, 25);
             this.buttonClearLog.TabIndex = 13;
@@ -190,26 +195,65 @@
             // 
             this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblStatus.Location = new System.Drawing.Point(805, 313);
+            this.lblStatus.Location = new System.Drawing.Point(785, 7);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(250, 16);
             this.lblStatus.TabIndex = 14;
             this.lblStatus.Text = "就绪";
             // 
+            // panelToolbar
+            // 
+            this.panelToolbar.Controls.Add(this.lblStatus);
+            this.panelToolbar.Controls.Add(this.buttonClearLog);
+            this.panelToolbar.Controls.Add(this.button4);
+            this.panelToolbar.Controls.Add(this.button3);
+            this.panelToolbar.Controls.Add(this.checkBoxMovePic);
+            this.panelToolbar.Controls.Add(this.Insert);
+            this.panelToolbar.Controls.Add(this.button1);
+            this.panelToolbar.Controls.Add(this.textBox1);
+            this.panelToolbar.Controls.Add(this.lblPath);
+            this.panelToolbar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelToolbar.Location = new System.Drawing.Point(0, 0);
+            this.panelToolbar.Name = "panelToolbar";
+            this.panelToolbar.Size = new System.Drawing.Size(1043, 32);
+            this.panelToolbar.TabIndex = 17;
+            // 
             // txtLog
             // 
-            this.txtLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtLog.BackColor = System.Drawing.SystemColors.Window;
+            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtLog.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtLog.Location = new System.Drawing.Point(12, 340);
+            this.txtLog.Location = new System.Drawing.Point(0, 32);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(1043, 268);
+            this.txtLog.Size = new System.Drawing.Size(1043, 262);
             this.txtLog.TabIndex = 15;
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer1.Location = new System.Drawing.Point(12, 38);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridView1);
+            this.splitContainer1.Panel1MinSize = 80;
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.txtLog);
+            this.splitContainer1.Panel2.Controls.Add(this.panelToolbar);
+            this.splitContainer1.Panel2MinSize = 100;
+            this.splitContainer1.Size = new System.Drawing.Size(1043, 570);
+            this.splitContainer1.SplitterDistance = 270;
+            this.splitContainer1.SplitterWidth = 6;
+            this.splitContainer1.TabIndex = 16;
             // 
             // Form1
             // 
@@ -217,26 +261,23 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1067, 620);
-            this.Controls.Add(this.txtLog);
-            this.Controls.Add(this.lblStatus);
-            this.Controls.Add(this.buttonClearLog);
-            this.Controls.Add(this.checkBoxMovePic);
-            this.Controls.Add(this.lblPath);
-            this.Controls.Add(this.button4);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.checkBox1);
-            this.Controls.Add(this.button2);
             this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.Insert);
-            this.Controls.Add(this.dataGridView1);
             this.Location = new System.Drawing.Point(15, 15);
             this.Name = "Form1";
             this.Activated += new System.EventHandler(this.Form1_Activated);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.panelToolbar.ResumeLayout(false);
+            this.panelToolbar.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -259,5 +300,7 @@
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Label lblPath;
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Panel panelToolbar;
     }
 }

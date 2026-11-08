@@ -176,63 +176,76 @@ namespace BLL
             return FileDAL.selectMyFileInfo("");
         }
 
+        public static void SortFiles(List<MyFileInfo> fileList, string sortBy, bool ascending)
+        {
+            if (fileList == null || fileList.Count <= 1 || string.IsNullOrEmpty(sortBy))
+                return;
+
+            Comparison<MyFileInfo> comparison;
+
+            switch (sortBy)
+            {
+                case "FileName":
+                    comparison = (x, y) => string.Compare(x.FileName, y.FileName, StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "Length":
+                    comparison = (x, y) => x.Length.CompareTo(y.Length);
+                    break;
+                case "DirectoryName":
+                    comparison = (x, y) => string.Compare(x.DirectoryName, y.DirectoryName, StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "Directory":
+                    comparison = (x, y) => string.Compare(x.Directory, y.Directory, StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "LastWriteTime":
+                    comparison = (x, y) => string.Compare(x.LastWriteTime, y.LastWriteTime, StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "LastAccessTime":
+                    comparison = (x, y) => string.Compare(x.LastAccessTime, y.LastAccessTime, StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "FileId":
+                    comparison = (x, y) => x.FileId.CompareTo(y.FileId);
+                    break;
+                case "CdId":
+                    comparison = (x, y) => x.CdId.CompareTo(y.CdId);
+                    break;
+                case "Extension":
+                    comparison = (x, y) => string.Compare(x.Extension, y.Extension, StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "Mark":
+                    comparison = (x, y) => string.Compare(x.Mark, y.Mark, StringComparison.OrdinalIgnoreCase);
+                    break;
+                default:
+                    var prop = typeof(MyFileInfo).GetProperty(sortBy);
+                    if (prop == null) return;
+                    comparison = (x, y) =>
+                    {
+                        var vx = prop.GetValue(x, null) as IComparable;
+                        var vy = prop.GetValue(y, null) as IComparable;
+                        if (vx == null && vy == null) return 0;
+                        if (vx == null) return -1;
+                        if (vy == null) return 1;
+                        return vx.CompareTo(vy);
+                    };
+                    break;
+            }
+
+            if (!ascending)
+            {
+                var original = comparison;
+                comparison = (x, y) => original(y, x);
+            }
+
+            fileList.Sort(comparison);
+        }
+
         public static List<MyFileInfo> Sort(List<MyFileInfo> oldList, string sortBy)
         {
-            List<MyFileInfo> newList = new List<MyFileInfo>();
-             if (oldList[0].GetType().GetProperty(sortBy).GetValue(oldList[0], null).GetType() == typeof(string))
-                newList = StringSort(oldList, sortBy);
-            else
-                newList = IntSort(oldList, sortBy);
-            return newList;
-        }
+            if (oldList == null || oldList.Count == 0 || string.IsNullOrEmpty(sortBy))
+                return oldList ?? new List<MyFileInfo>();
 
-        private static List<MyFileInfo> IntSort(List<MyFileInfo> oldList, string sortBy)
-        {
-            List<MyFileInfo> newList = new List<MyFileInfo>();
-            MyFileInfo minMyFileInfo = oldList[0];
-            while (oldList.Count > 1)
-            {
-                for (int i = 0; i < oldList.Count - 1; i++)
-                {
-                    //Console.WriteLine("for");
-                    if (Convert.ToInt32(minMyFileInfo.GetType().GetProperty(sortBy).GetValue(minMyFileInfo, null)) > Convert.ToInt32(oldList[i+1].GetType().GetProperty(sortBy).GetValue(oldList[i+1], null)))
-                    {
-                        minMyFileInfo = oldList[i + 1];
-                       
-                    }
-                    
-                }
-                newList.Add(minMyFileInfo);
-                oldList.Remove(minMyFileInfo);
-                minMyFileInfo = oldList[0];
-
-            }
-            newList.Add(oldList[0]);
-            return newList;
-        }
-
-        private static List<MyFileInfo> StringSort(List<MyFileInfo> oldList, string sortBy)
-        {
-            List<MyFileInfo> newList = new List<MyFileInfo>();
-            MyFileInfo minMyFileInfo = oldList[0];
-            while (oldList.Count > 1)
-            {
-                for (int i = 0; i < oldList.Count - 1; i++)
-                {
-                    //Console.WriteLine("for");
-                    if (minMyFileInfo.GetType().GetProperty(sortBy).GetValue(minMyFileInfo, null).ToString().CompareTo(oldList[i+1].GetType().GetProperty(sortBy).GetValue(oldList[i+1], null).ToString())>0)
-                    {
-                        minMyFileInfo = oldList[i + 1];
-                        
-                    }
-      
-                }
-                newList.Add(minMyFileInfo);
-                oldList.Remove(minMyFileInfo);
-                minMyFileInfo = oldList[0];
-            }
-            newList.Add(oldList[0]);
-
+            List<MyFileInfo> newList = new List<MyFileInfo>(oldList);
+            SortFiles(newList, sortBy, true);
             return newList;
         }
 
