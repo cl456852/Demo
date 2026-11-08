@@ -20,9 +20,82 @@ namespace UI1
 {
     public partial class Form1 : Form
     {
+        private NotifyIcon notifyIcon;
+
         public Form1()
         {
             InitializeComponent();
+            InitNotifyIcon();
+        }
+
+        private void InitNotifyIcon()
+        {
+            try
+            {
+                if (notifyIcon == null)
+                {
+                    notifyIcon = new NotifyIcon();
+                    notifyIcon.Icon = SystemIcons.Information;
+                    notifyIcon.Text = "Demo 文件扫描";
+                    notifyIcon.Visible = true;
+                    notifyIcon.BalloonTipClicked += (s, e) =>
+                    {
+                        try
+                        {
+                            if (this.WindowState == FormWindowState.Minimized)
+                            {
+                                this.WindowState = FormWindowState.Normal;
+                            }
+                            this.Activate();
+                            this.BringToFront();
+                        }
+                        catch { }
+                    };
+
+                    this.FormClosing += (s, e) =>
+                    {
+                        try
+                        {
+                            if (notifyIcon != null)
+                            {
+                                notifyIcon.Visible = false;
+                                notifyIcon.Dispose();
+                                notifyIcon = null;
+                            }
+                        }
+                        catch { }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"InitNotifyIcon error: {ex.Message}");
+            }
+        }
+
+        public void ShowWindowsNotification(string title, string message)
+        {
+            try
+            {
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action<string, string>(ShowWindowsNotification), title, message);
+                    return;
+                }
+
+                InitNotifyIcon();
+                if (notifyIcon != null)
+                {
+                    notifyIcon.BalloonTipTitle = title;
+                    notifyIcon.BalloonTipText = message;
+                    notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
+                    notifyIcon.ShowBalloonTip(5000);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"[系统通知异常] {ex.Message}");
+            }
         }
         List<MyFileInfo> list = new List<MyFileInfo>();
         MD5 md5 = MD5.Create();
@@ -172,6 +245,20 @@ namespace UI1
                 AppendLog("================ 扫描流程结束 ================");
                 lblStatus.Text = "扫描完成";
 
+                string finishMsg = (duplicateList != null && duplicateList.Count > 0)
+                    ? $"扫描完成！发现 {duplicateList.Count} 个重复文件。"
+                    : "扫描完成！所有文件已成功入库。";
+
+                // 1. 发送 Windows 系统右下角桌面通知 (气泡/Toast)
+                ShowWindowsNotification("扫描完成", $"{finishMsg}\n扫描路径: {targetPath}");
+
+                // 2. 若窗口处于最小化，将其恢复并激活窗体
+                if (this.WindowState == FormWindowState.Minimized)
+                {
+                    this.WindowState = FormWindowState.Normal;
+                }
+                this.Activate();
+
                 if (duplicateList != null && duplicateList.Count > 0)
                 {
                     AppendLog($"发现 {duplicateList.Count} 个重复文件，准备弹出确认窗口...");
@@ -192,10 +279,11 @@ namespace UI1
                         }
                     }
                     f2.Show();
+                    MessageBox.Show(this, finishMsg, "扫描完成提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("扫描入库成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(this, finishMsg, "扫描完成提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 refresh();
@@ -203,6 +291,7 @@ namespace UI1
             catch (Exception ex)
             {
                 AppendLog($"[致命错误] 扫描过程发生异常: {ex.Message}");
+                ShowWindowsNotification("扫描异常", $"扫描过程发生错误: {ex.Message}");
                 MessageBox.Show("扫描发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
