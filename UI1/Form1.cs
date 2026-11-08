@@ -29,10 +29,37 @@ namespace UI1
         public Form1()
         {
             InitializeComponent();
+            InitAppIcon();
             InitNotifyIcon();
             InitSearchDebounce();
             EnableDoubleBuffered(dataGridView1);
             this.dataGridView1.DataBindingComplete += DataGridView1_DataBindingComplete;
+        }
+
+        private void InitAppIcon()
+        {
+            try
+            {
+                Icon appIcon = null;
+                string icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                if (File.Exists(icoPath))
+                {
+                    appIcon = new Icon(icoPath);
+                }
+                else
+                {
+                    appIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+                }
+
+                if (appIcon != null)
+                {
+                    this.Icon = appIcon;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"InitAppIcon error: {ex.Message}");
+            }
         }
 
         private void DataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
@@ -103,7 +130,7 @@ namespace UI1
                 if (notifyIcon == null)
                 {
                     notifyIcon = new NotifyIcon();
-                    notifyIcon.Icon = SystemIcons.Information;
+                    notifyIcon.Icon = this.Icon ?? SystemIcons.Information;
                     notifyIcon.Text = "Demo 文件扫描";
                     notifyIcon.Visible = true;
                     notifyIcon.BalloonTipClicked += (s, e) =>
