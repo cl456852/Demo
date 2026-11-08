@@ -14,6 +14,7 @@ using DB;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UI1
@@ -21,11 +22,56 @@ namespace UI1
     public partial class Form1 : Form
     {
         private NotifyIcon notifyIcon;
+        private System.Windows.Forms.Timer searchTimer;
+        private CancellationTokenSource searchCts;
+        private bool isUpdatingSearchText = false;
 
         public Form1()
         {
             InitializeComponent();
             InitNotifyIcon();
+            InitSearchDebounce();
+            EnableDoubleBuffered(dataGridView1);
+        }
+
+        private void InitSearchDebounce()
+        {
+            searchTimer = new System.Windows.Forms.Timer();
+            searchTimer.Interval = 300; // 300ms防抖：停顿输入300毫秒后自动触发后台搜索
+            searchTimer.Tick += SearchTimer_Tick;
+
+            this.textBox2.KeyDown += TextBox2_KeyDown;
+        }
+
+        private void TextBox2_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true; // 消除回车按键提示音
+                searchTimer.Stop();
+                ExecuteSearchAsync(textBox2.Text);
+            }
+        }
+
+        private void SearchTimer_Tick(object sender, EventArgs e)
+        {
+            searchTimer.Stop();
+            ExecuteSearchAsync(textBox2.Text);
+        }
+
+        public static void EnableDoubleBuffered(Control control)
+        {
+            try
+            {
+                typeof(Control).InvokeMember(
+                    "DoubleBuffered",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+                    null,
+                    control,
+                    new object[] { true }
+                );
+            }
+            catch { }
         }
 
         private void InitNotifyIcon()
@@ -56,6 +102,18 @@ namespace UI1
                     {
                         try
                         {
+                            if (searchTimer != null)
+                            {
+                                searchTimer.Stop();
+                                searchTimer.Dispose();
+                                searchTimer = null;
+                            }
+                            if (searchCts != null)
+                            {
+                                searchCts.Cancel();
+                                searchCts.Dispose();
+                                searchCts = null;
+                            }
                             if (notifyIcon != null)
                             {
                                 notifyIcon.Visible = false;
@@ -104,7 +162,14 @@ namespace UI1
         {
             list = FileBLL.getFileList();
             dataGridView1.DataSource = list;
-            dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 20;
+            if (dataGridView1.RowCount > 20)
+            {
+                dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 20;
+            }
+            if (lblStatus != null)
+            {
+                lblStatus.Text = $"共 {list.Count:N0} 条记录";
+            }
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -468,47 +533,168 @@ namespace UI1
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
-            if (checkBox1.Checked && !textBox2.Text.Contains(" ")&&!textBox2.Text.Contains("-") &&(!FileBLL.IsEnCh(textBox2.Text)&&!FileBLL.IsNum(textBox2.Text)))
+            if (isUpdatingSearchText) return;
+
+            if (textBox2.Text.Contains("`"))
+            {
+                isUpdatingSearchText = true;
+                textBox2.Text = "";
+                isUpdatingSearchText = false;
+                if (searchTimer != null) searchTimer.Stop();
+                refresh();
+                return;
+            }
+
+            if (checkBox1.Checked && !textBox2.Text.Contains(" ") && !textBox2.Text.Contains("-") && (!FileBLL.IsEnCh(textBox2.Text) && !FileBLL.IsNum(textBox2.Text)))
             {
                 string[] id = FileBLL.GetId(textBox2.Text);
+                isUpdatingSearchText = true;
                 textBox2.Text = id[0] + " " + id[1];
+                textBox2.SelectionStart = textBox2.Text.Length;
+                isUpdatingSearchText = false;
             }
+
             if (checkBox2.Checked)
             {
                 string output = Regex.Replace(textBox2.Text, "(\\B[A-Z])", " $1");
-                textBox2.Text = output;
-            }
-            if (textBox2.Text.Contains("`"))
-            {
-                textBox2.Text = "";
-                refresh();
-            }
-            string[] searchStr = textBox2.Text.ToLower().Split(' ');
-            bool flag = true;
-            List<MyFileInfo> newList=new List<MyFileInfo>();
-            for (int i = 0; i < list.Count; i++)
-            {
-
-                flag = true;
-                for (int j = 0; j < searchStr.Length; j++)
+                if (output != textBox2.Text)
                 {
-                    if (!(list[i].Directory.ToLower().Contains(searchStr[j]) || list[i].FileName.Substring(0, list[i].FileName.LastIndexOf('.') >= 0 ? list[i].FileName.LastIndexOf('.') : list[i].FileName.Length).ToLower().Contains(searchStr[j]) || list[i].Mark.ToLower().Contains(searchStr[j])))
-                    {
-                        flag = false;
-                        break;
-                        
-                    }
-                    
-                    
+                    isUpdatingSearchText = true;
+                    textBox2.Text = output;
+                    textBox2.SelectionStart = textBox2.Text.Length;
+                    isUpdatingSearchText = false;
                 }
-                if (flag)
-                    newList.Add(list[i]);
-                
             }
-            this.dataGridView1.DataSource = newList;
-            //list = newList;
-            dataGridView1.Refresh();
 
+            // 文本为空时，立即清除过滤恢复完整列表，无需等待防抖
+            if (string.IsNullOrWhiteSpace(textBox2.Text))
+            {
+                if (searchTimer != null) searchTimer.Stop();
+                ExecuteSearchAsync("");
+                return;
+            }
+
+            // 防抖：重置定时器，用户停止按键300ms后再发起搜索
+            if (searchTimer != null)
+            {
+                searchTimer.Stop();
+                searchTimer.Start();
+            }
+        }
+
+        private async void ExecuteSearchAsync(string query)
+        {
+            // 取消上一次正在执行的后台搜索任务
+            if (searchCts != null)
+            {
+                searchCts.Cancel();
+                searchCts.Dispose();
+                searchCts = null;
+            }
+
+            searchCts = new CancellationTokenSource();
+            CancellationToken token = searchCts.Token;
+
+            string[] searchTerms = (query ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (searchTerms.Length == 0)
+            {
+                dataGridView1.DataSource = list;
+                if (lblStatus != null)
+                {
+                    lblStatus.Text = $"共 {list.Count:N0} 条记录";
+                }
+                return;
+            }
+
+            if (lblStatus != null)
+            {
+                lblStatus.Text = "正在搜索...";
+            }
+
+            try
+            {
+                List<MyFileInfo> sourceList = list;
+                if (sourceList == null || sourceList.Count == 0)
+                {
+                    if (lblStatus != null) lblStatus.Text = "列表为空";
+                    return;
+                }
+
+                // 在后台工作线程执行过滤，完全不阻塞 UI 输入与响应
+                List<MyFileInfo> filteredList = await Task.Run(() =>
+                {
+                    List<MyFileInfo> result = new List<MyFileInfo>();
+
+                    for (int i = 0; i < sourceList.Count; i++)
+                    {
+                        // 周期性检查是否已被新输入的搜索取消
+                        if ((i & 2047) == 0 && token.IsCancellationRequested)
+                        {
+                            return null;
+                        }
+
+                        MyFileInfo item = sourceList[i];
+                        bool matchAll = true;
+
+                        for (int j = 0; j < searchTerms.Length; j++)
+                        {
+                            string term = searchTerms[j];
+
+                            // 优先匹配短字符串 FileName，再匹配 Directory 和 Mark
+                            // 使用 OrdinalIgnoreCase 进行高速大小写不敏感匹配，零内存分配
+                            bool matched = (item.FileName != null && item.FileName.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        || (item.Directory != null && item.Directory.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        || (item.Mark != null && item.Mark.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0);
+
+                            if (!matched)
+                            {
+                                matchAll = false;
+                                break;
+                            }
+                        }
+
+                        if (matchAll)
+                        {
+                            result.Add(item);
+                        }
+                    }
+
+                    return result;
+                }, token);
+
+                if (token.IsCancellationRequested || filteredList == null)
+                {
+                    return;
+                }
+
+                // 回到 UI 线程更新表格数据源
+                // 如果结果过多（超过5000条），只展示前5000条，避免 WinForms 控件渲染十几万行时卡死
+                if (filteredList.Count > 5000)
+                {
+                    dataGridView1.DataSource = filteredList.Take(5000).ToList();
+                    if (lblStatus != null)
+                    {
+                        lblStatus.Text = $"找到 {filteredList.Count:N0} 条记录 (已显示前 5,000 条)";
+                    }
+                }
+                else
+                {
+                    dataGridView1.DataSource = filteredList;
+                    if (lblStatus != null)
+                    {
+                        lblStatus.Text = $"找到 {filteredList.Count:N0} 条记录";
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常取消
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"[搜索异常] {ex.Message}");
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
