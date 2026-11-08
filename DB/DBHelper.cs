@@ -43,42 +43,58 @@ namespace DB
 
         public static int ExecuteInsert_SP(string spName, MyFileInfo fi)
         {
-           // using (SqlConnection conn = new SqlConnection(connstr))
-            //{
+            try
+            {
                 SqlCommand objCommand = new SqlCommand(spName, conn);
                 objCommand.CommandType = CommandType.StoredProcedure;
-                objCommand.Parameters.Add("@fileName", SqlDbType.VarChar, 300).Value=fi.FileName;
-                objCommand.Parameters.Add(	"@extension", SqlDbType.VarChar,50 ).Value=fi.Extension;
-	            objCommand.Parameters.Add("@directoryName" ,SqlDbType.VarChar,500).Value=fi.DirectoryName;
-	            objCommand.Parameters.Add("@directory", SqlDbType.VarChar,500).Value=fi.Directory;
-	            objCommand.Parameters.Add("@length" ,SqlDbType.Float).Value=fi.Length;
-	            objCommand.Parameters.Add("@lastAccessTime" , SqlDbType.VarChar,50).Value=fi.LastAccessTime; 
-	            objCommand.Parameters.Add("@lastWriteTime", SqlDbType.VarChar,50 ).Value=fi.LastWriteTime;
-                objCommand.Parameters.Add("@mark", SqlDbType.Text).Value=fi.Mark;
+                objCommand.Parameters.Add("@fileName", SqlDbType.VarChar, 300).Value = fi.FileName;
+                objCommand.Parameters.Add("@extension", SqlDbType.VarChar, 50).Value = fi.Extension;
+                objCommand.Parameters.Add("@directoryName", SqlDbType.VarChar, 500).Value = fi.DirectoryName;
+                objCommand.Parameters.Add("@directory", SqlDbType.VarChar, 500).Value = fi.Directory;
+                objCommand.Parameters.Add("@length", SqlDbType.Float).Value = fi.Length;
+                objCommand.Parameters.Add("@lastAccessTime", SqlDbType.VarChar, 50).Value = fi.LastAccessTime; 
+                objCommand.Parameters.Add("@lastWriteTime", SqlDbType.VarChar, 50).Value = fi.LastWriteTime;
+                objCommand.Parameters.Add("@mark", SqlDbType.Text).Value = fi.Mark;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
                 conn.Open();
                 int i = objCommand.ExecuteNonQuery();
                 conn.Close();
-
-                //conn.Dispose();
                 return i;
-                
-            //}
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ExecuteInsert_SP error: " + ex.Message);
+                try { if (conn.State != ConnectionState.Closed) conn.Close(); } catch { }
+                throw;
+            }
         }
 
         public static int ExecuteInsertPic_SP(Pic pic)
         {
-            SqlCommand objCommand = new SqlCommand("dbo.sp_InsertPic", conn);
-            objCommand.CommandType = CommandType.StoredProcedure;
-            objCommand.Parameters.Add("@name", SqlDbType.VarChar, 255).Value = pic.Name;
-            objCommand.Parameters.Add("@path", SqlDbType.VarChar, 255).Value = pic.Path;
-            objCommand.Parameters.Add("@length", SqlDbType.Float, 255).Value = pic.Length;
-            objCommand.Parameters.Add("@md5", SqlDbType.VarChar, 50).Value = pic.Md5;
-            objCommand.Parameters.Add("@mark", SqlDbType.Text).Value = pic.Mark;
-            objCommand.Parameters.Add("@fileName", SqlDbType.VarChar, 255).Value = pic.FileName;
-            conn.Open();
-            int i = objCommand.ExecuteNonQuery();
-            conn.Close();
-            return i;
+            try
+            {
+                SqlCommand objCommand = new SqlCommand("dbo.sp_InsertPic", conn);
+                objCommand.CommandType = CommandType.StoredProcedure;
+                objCommand.Parameters.Add("@name", SqlDbType.VarChar, 255).Value = pic.Name;
+                objCommand.Parameters.Add("@path", SqlDbType.VarChar, 255).Value = pic.Path;
+                objCommand.Parameters.Add("@length", SqlDbType.Float, 255).Value = pic.Length;
+                objCommand.Parameters.Add("@md5", SqlDbType.VarChar, 50).Value = pic.Md5;
+                objCommand.Parameters.Add("@mark", SqlDbType.Text).Value = pic.Mark;
+                objCommand.Parameters.Add("@fileName", SqlDbType.VarChar, 255).Value = pic.FileName;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                int i = objCommand.ExecuteNonQuery();
+                conn.Close();
+                return i;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ExecuteInsertPic_SP error: " + ex.Message);
+                try { if (conn.State != ConnectionState.Closed) conn.Close(); } catch { }
+                throw;
+            }
         }
     }
 }

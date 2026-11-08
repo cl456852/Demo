@@ -14,6 +14,7 @@ using DB;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace UI1
 {
@@ -65,117 +66,291 @@ namespace UI1
                 MessageBox.Show("Fail");
         }
 
-        private void Insert_Click(object sender, EventArgs e)
+        public void AppendLog(string message)
         {
-            List<string> picList= FileBLL.movePic(textBox1.Text);
-            ArrayList duplicatePics = new ArrayList(); ;
-            foreach (string path in picList)
+            if (this.InvokeRequired)
             {
-                duplicatePics.AddRange( processPic(path));
+                this.BeginInvoke(new Action<string>(AppendLog), message);
+                return;
             }
-            foreach (Pic pic in duplicatePics)
+            string timeStamp = DateTime.Now.ToString("HH:mm:ss");
+            string line = $"[{timeStamp}] {message}\r\n";
+            if (txtLog.TextLength > 300000)
             {
-               
-                    movePic(pic.Path);
+                txtLog.Select(0, 50000);
+                txtLog.SelectedText = "";
             }
-            string index = textBox1.Text.Split('\\')[1];
-            string picPath = Path.GetPathRoot(textBox1.Text)+ "Pic" + index;
-            removeEmptyFolder(picPath);
-            List<MyFileInfo> duplicateList = new List<MyFileInfo>();
-            duplicateList= FileBLL.InsertFiles(textBox1.Text.Replace("\\","\\\\"));
-            if (duplicateList.Capacity > 0)
-            {
+            txtLog.AppendText(line);
+            txtLog.ScrollToCaret();
+        }
 
-                Form2 f2 = new Form2(duplicateList);
-                foreach (MyFileInfo myFileInfo in duplicateList)
-                {
-                    if (myFileInfo.Length > 70)
-                        moveFile(myFileInfo, ":\\duplicate\\");
-                }
-                f2.Show();
+        private void buttonClearLog_Click(object sender, EventArgs e)
+        {
+            txtLog.Clear();
+        }
+
+        private async void Insert_Click(object sender, EventArgs e)
+        {
+            string targetPath = textBox1.Text.Trim();
+            if (string.IsNullOrEmpty(targetPath) || !Directory.Exists(targetPath))
+            {
+                MessageBox.Show("目标路径不存在或无法访问: " + targetPath, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else
-                MessageBox.Show("seccuss");
-            refresh();
+
+            Insert.Enabled = false;
+            button1.Enabled = false;
+            lblStatus.Text = "正在扫描...";
+            AppendLog($"================ 开始扫描: {targetPath} ================");
+
+            bool checkMd5AndDup = checkBoxMovePic.Checked;
+            AppendLog($"【计算MD5并查重】模式: {(checkMd5AndDup ? "开启 (计算MD5并排重)" : "关闭 (图片不计算MD5、不查重，直接快速入库)")}");
+
+            List<MyFileInfo> duplicateList = new List<MyFileInfo>();
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    // 1. 图片处理：移动图片文件夹并入库到 pic 表
+                    AppendLog("正在检测图片文件夹并移动...");
+                    try
+                    {
+                        List<string> picList = FileBLL.movePic(targetPath, AppendLog);
+                        AppendLog($"已找到并移动图片文件夹 {picList.Count} 个");
+
+                        ArrayList duplicatePics = new ArrayList();
+                        foreach (string path in picList)
+                        {
+                            duplicatePics.AddRange(processPic(path, checkMd5AndDup, AppendLog));
+                        }
+
+                        // 若开启了MD5查重，将发现的重复图片移到 duplicate 目录
+                        if (checkMd5AndDup && duplicatePics.Count > 0)
+                        {
+                            AppendLog($"正在移动 {duplicatePics.Count} 张重复图片到 duplicate 文件夹...");
+                            foreach (Pic pic in duplicatePics)
+                            {
+                                movePic(pic.Path);
+                            }
+                        }
+
+                        // 清理 Pic 目录下的空文件夹
+                        string cleanPath = targetPath.TrimEnd('\\');
+                        string[] parts = cleanPath.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length > 1)
+                        {
+                            string index = parts[1];
+                            string picPath = Path.Combine(Path.GetPathRoot(targetPath), "pic" + index);
+                            removeEmptyFolder(picPath);
+                        }
+                        removeEmptyFolder(targetPath);
+                        AppendLog("图片处理与入库完毕。");
+                    }
+                    catch (Exception picEx)
+                    {
+                        AppendLog($"[警告] 图片处理过程异常: {picEx.Message}");
+                    }
+
+                    // 2. 流式安全扫描主目录中的视频/多媒体文件并实时入库 (已剔除图片格式，不再产生图片[入库]日志)
+                    duplicateList = FileBLL.InsertFilesStream(
+                        targetPath,
+                        AppendLog,
+                        status =>
+                        {
+                            if (this.InvokeRequired)
+                            {
+                                this.BeginInvoke(new Action(() => lblStatus.Text = status));
+                            }
+                            else
+                            {
+                                lblStatus.Text = status;
+                            }
+                        });
+                });
+
+                AppendLog("================ 扫描流程结束 ================");
+                lblStatus.Text = "扫描完成";
+
+                if (duplicateList != null && duplicateList.Count > 0)
+                {
+                    AppendLog($"发现 {duplicateList.Count} 个重复文件，准备弹出确认窗口...");
+                    Form2 f2 = new Form2(duplicateList);
+                    foreach (MyFileInfo myFileInfo in duplicateList)
+                    {
+                        if (myFileInfo.Length > 70)
+                        {
+                            try
+                            {
+                                moveFile(myFileInfo, ":\\duplicate\\");
+                                AppendLog($"[移动重复大文件 >70M] {myFileInfo.FileName}");
+                            }
+                            catch (Exception ex)
+                            {
+                                AppendLog($"[移动文件失败] {myFileInfo.FileName}: {ex.Message}");
+                            }
+                        }
+                    }
+                    f2.Show();
+                }
+                else
+                {
+                    MessageBox.Show("扫描入库成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                refresh();
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"[致命错误] 扫描过程发生异常: {ex.Message}");
+                MessageBox.Show("扫描发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Insert.Enabled = true;
+                button1.Enabled = true;
+            }
         }
 
         private void removeEmptyFolder(String path)
         {
-            if (Directory.Exists(path))
+            try
             {
-                String[] pathes = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
-                foreach (string p in pathes)
+                if (Directory.Exists(path))
                 {
-                    if (Directory.Exists(p)&& Directory.GetFiles(p, "*", SearchOption.AllDirectories).Length == 0)
-                        Directory.Delete(p,true);
+                    string[] pathes = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
+                    Array.Reverse(pathes);
+                    foreach (string p in pathes)
+                    {
+                        if (Directory.Exists(p) && Directory.GetFileSystemEntries(p).Length == 0)
+                            Directory.Delete(p, false);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"[清理空目录异常] {path}: {ex.Message}");
             }
         }
 
-        private ArrayList processPic(string path)
+        private ArrayList processPic(string path, bool checkMd5AndDup, Action<string> logAction = null)
         {
             ArrayList duplicatePics = new ArrayList();
-            String[] pathes = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
-            foreach(string p in pathes)
+            try
             {
-                FileInfo fileInfo=new FileInfo(p);
+                String[] pathes = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+                int total = pathes.Length;
+                int current = 0;
+                int insertedCount = 0;
+                int duplicateCount = 0;
 
-                Pic pic=new Pic();
-                pic.Md5 = GetMd5(p);
-                pic.Name=Path.GetFileName(path);
-                pic.Length = fileInfo.Length/1024;
-                pic.Path = p;
-
-                if(!FileDAL.CheckPic(pic))
+                foreach (string p in pathes)
                 {
-                    FileDAL.InsertPic(pic);
-                }
-                else
-                {
-                    duplicatePics.Add(pic);
+                    try
+                    {
+                        current++;
+                        FileInfo fileInfo = new FileInfo(p);
+
+                        Pic pic = new Pic();
+                        pic.Name = Path.GetFileName(path);
+                        pic.Length = fileInfo.Length / 1024;
+                        pic.Path = p;
+                        pic.Mark = "";
+
+                        if (checkMd5AndDup)
+                        {
+                            pic.Md5 = GetMd5(p);
+                            if (!FileDAL.CheckPic(pic))
+                            {
+                                FileDAL.InsertPic(pic);
+                                insertedCount++;
+                                logAction?.Invoke($"  [图片入库] ({current}/{total}) {fileInfo.Name} (MD5: {pic.Md5})");
+                            }
+                            else
+                            {
+                                duplicatePics.Add(pic);
+                                duplicateCount++;
+                                logAction?.Invoke($"  [重复图片] ({current}/{total}) {fileInfo.Name}");
+                            }
+                        }
+                        else
+                        {
+                            pic.Md5 = "";
+                            FileDAL.InsertPic(pic);
+                            insertedCount++;
+                            if (current % 20 == 0 || current == total || total <= 20)
+                            {
+                                logAction?.Invoke($"  [图片直接入库(免MD5/免查重)] ({current}/{total}) {fileInfo.Name}");
+                            }
+                        }
+                    }
+                    catch (Exception fileEx)
+                    {
+                        logAction?.Invoke($"  [单文件入库跳过] {Path.GetFileName(p)}: {fileEx.Message}");
+                    }
                 }
 
+                logAction?.Invoke($"[图片目录处理完毕] {path}: 共 {total} 张, 新入库 {insertedCount} 张{(checkMd5AndDup ? $", 重复 {duplicateCount} 张" : "")}");
+            }
+            catch (Exception ex)
+            {
+                logAction?.Invoke($"[图片处理异常] {path}: {ex.Message}");
             }
             return duplicatePics;
         }
 
         public static void moveFile(MyFileInfo myFileInfo, string subDir)
         {
-            if(!Directory.Exists(myFileInfo.DirectoryName[0] + subDir))
-                Directory.CreateDirectory(myFileInfo.DirectoryName[0] + subDir);
-            string newPath = Path.Combine(myFileInfo.DirectoryName[0] + subDir, myFileInfo.FileName);
-            while (File.Exists(newPath))
-                newPath += "1";
-           
-            File.Move(Path.Combine(myFileInfo.DirectoryName, myFileInfo.FileName), newPath);
-            
-        
-                
+            try
+            {
+                if (string.IsNullOrEmpty(myFileInfo.DirectoryName)) return;
+                string dirPrefix = myFileInfo.DirectoryName[0] + subDir;
+                if (!Directory.Exists(dirPrefix))
+                    Directory.CreateDirectory(dirPrefix);
+                string newPath = Path.Combine(dirPrefix, myFileInfo.FileName);
+                int retry = 0;
+                while (File.Exists(newPath) && retry++ < 50)
+                    newPath += "1";
+
+                File.Move(Path.Combine(myFileInfo.DirectoryName, myFileInfo.FileName), newPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("moveFile error: " + ex.Message);
+            }
         }
 
         private void movePic(string path)
         {
-            string fileName = Path.GetFileName(path);
-            string directoryName = path.Split('\\')[3];
+            try
+            {
+                string fileName = Path.GetFileName(path);
+                string[] parts = path.Split('\\');
+                string directoryName = parts.Length > 3 ? parts[3] : "unknown";
 
-            string directory = path[0] + ":\\duplicate\\"+directoryName;
-            if (!Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
-            string newPath = Path.Combine(directory, Path.GetFileName(path));
-            while (File.Exists(newPath))
-                newPath += "1";
-            File.Move(path, newPath);
-
+                string directory = path[0] + ":\\duplicate\\" + directoryName;
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                string newPath = Path.Combine(directory, Path.GetFileName(path));
+                int retry = 0;
+                while (File.Exists(newPath) && retry++ < 50)
+                    newPath += "1";
+                File.Move(path, newPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("movePic error: " + ex.Message);
+            }
         }
+
         private void button1_Click(object sender, EventArgs e)
         {
-
             using (OpenFolderDialog openFolderDlg = new OpenFolderDialog())
             {
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
                 {
                     this.textBox1.Text = openFolderDlg.Path;
-                    Console.WriteLine(this.textBox1.Text.Replace("\\","\\\\"));
+                    Console.WriteLine(this.textBox1.Text.Replace("\\", "\\\\"));
                 }
             }
         }

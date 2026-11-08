@@ -55,6 +55,14 @@ namespace MODEL
             set { mark = value; }
         }
 
-        public string FileName => Util.Regex.Match(Path).Value;
+        public string FileName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Path)) return "";
+                string match = Util.Regex.Match(Path).Value;
+                return string.IsNullOrEmpty(match) ? System.IO.Path.GetFileName(Path) : match;
+            }
+        }
     }
 }

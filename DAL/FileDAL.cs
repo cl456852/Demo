@@ -15,6 +15,14 @@ namespace DAL
     {
 
         public static int cdNo;
+
+        public static bool InsertSingle(MyFileInfo fi)
+        {
+            bool isDuplicate = Check(fi);
+            cdNo = DBHelper.ExecuteInsert_SP("dbo.sp_InsertCD", fi);
+            return isDuplicate;
+        }
+
         public static List<MyFileInfo> Insert(ArrayList list)
         {
             List<MyFileInfo> duplicateList = new List<MyFileInfo>();
@@ -36,17 +44,29 @@ namespace DAL
             DBHelper.ExecuteInsertPic_SP(pic);
         }
 
-        private static bool Check(MyFileInfo fi)
+        public static bool Check(MyFileInfo fi)
         {
-            bool flag=false;
-            string sql = "select * from files where [fileName] = '" + fi.FileName + "' and [length]= "+fi.Length +" and extension !='.vob'";
-            //string sql = "select * from files where [fileName] = '" + fi.FileName + "' or [mark]='" + fi.Mark+"'";
-            SqlDataReader sdr = DBHelper.SearchSql(sql);
-            if (sdr.Read())
-                flag = true;
-            sdr.Close();
-            sdr.Dispose();
-            DBHelper.conn.Close();
+            bool flag = false;
+            try
+            {
+                string sql = "select * from files where [fileName] = '" + fi.FileName + "' and [length]= " + fi.Length + " and extension !='.vob'";
+                SqlDataReader sdr = DBHelper.SearchSql(sql);
+                if (sdr.Read())
+                    flag = true;
+                sdr.Close();
+                sdr.Dispose();
+                DBHelper.conn.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Check error: " + ex.Message);
+                try
+                {
+                    if (DBHelper.conn.State != System.Data.ConnectionState.Closed)
+                        DBHelper.conn.Close();
+                }
+                catch { }
+            }
             return flag;
         }
 
